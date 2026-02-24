@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Level 1 Listening</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+        }
+
+        .day-selector {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+            color: #2d3748;
+            outline: none;
+            cursor: pointer;
+            background: white;
+            font-weight: bold;
+            max-width: 100%;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e0;
+        }
+
+        .setting-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-group label {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .setting-group select {
+            padding: 8px 12px;
+            font-size: 1rem;
+            border: 1px solid #667eea;
+        }
+
+        .status {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 5px 10px;
+        }
+
+        .label {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            color: #2d3748;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .progress {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 30px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .current-word {
+            text-align: center;
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 40px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .starting {
+            text-align: center;
+            font-size: 1.5em;
+            color: #667eea;
+            margin: 40px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 5px;
+            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .preview {
+            margin-top: 30px;
+        }
+
+        .preview-list {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px dashed #cbd5e0;
+        }
+
+        .answers {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .answers h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .answer-list {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .answer-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .answer-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .answer-number {
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+
+        .answer-text {
+            color: #2d3748;
+            font-size: 1.7em;
+            font-weight: 600;
+        }
+
+        .answer-meaning {
+            color: #718096;
+            font-size: 1.3em;
+            text-align: right;
+            margin-left: 10px;
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 High Level 1 Listening 听写</h1>
+
+        <div class="day-selector">
+            <select id="daySelect" onchange="loadDay()"></select>
+        </div>
+
+        <div class="settings-row">
+            <div class="setting-group">
+                <label>语速:</label>
+                <select id="speechRate">
+                    <option value="1">正常</option>
+                    <option value="0.9">稍慢</option>
+                    <option value="0.8" selected>较慢</option>
+                    <option value="0.7">很慢</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>每词朗读:</label>
+                <select id="repeatCount">
+                    <option value="1">1次</option>
+                    <option value="2">2次</option>
+                    <option value="3" selected>3次</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>写字时长:</label>
+                <select id="waitTime">
+                    <option value="5">5秒</option>
+                    <option value="8">8秒</option>
+                    <option value="10" selected>10秒</option>
+                    <option value="12">12秒</option>
+                    <option value="15">15秒</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="label">本组词数</span>
+                <span class="value" id="totalCount">0</span>
+            </div>
+            <div class="status-item">
+                <span class="label">当前进度</span>
+                <span class="value" id="currentProgress">0 / 0</span>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+
+        <div class="current-word" id="currentWord" style="display: none;"></div>
+        <div class="starting" id="starting">准备开始...</div>
+
+        <div class="controls">
+            <button id="startBtn" onclick="startDictation()">开始听写</button>
+            <button id="pauseBtn" onclick="pauseDictation()" style="display: none;" disabled>暂停</button>
+            <button id="resumeBtn" onclick="resumeDictation()" style="display: none;">继续</button>
+            <button id="restartBtn" onclick="resetDictation()" style="display: none; background: #e53e3e;">重置</button>
+        </div>
+
+        <div class="preview" id="previewArea">
+            <div class="preview-list" id="previewList"></div>
+        </div>
+
+        <div class="answers" id="answers">
+            <h2>📝 听写答案</h2>
+            <div class="answer-list" id="answerList"></div>
+        </div>
+    </div>
+
+    <script>
+        // 词汇数据
+        const wordData = {
+            "第一部分 Unit 1": [
+                { "text": "heritage", "meaning": "n.遗产(指国家或社会长期形成的历史、传统和特色)" },
+                { "text": "creatively", "meaning": "adv. 创造性地;有创造力地" },
+                { "text": "creative", "meaning": "adj. 创造性的;有创造力的;有创意的" },
+                { "text": "temple", "meaning": "n. 寺;庙" },
+                { "text": "relic", "meaning": "n. 遗物;遗迹" },
+                { "text": "mount", "meaning": "n. 山峰; v. 爬上, 骑上, 登上" },
+                { "text": "former", "meaning": "adj. 以前的;(两者中)前者的" },
+                { "text": "clue", "meaning": "n. 线索;提示" },
+                { "text": "preserve", "meaning": "vt. 保存; 保护;维持; n. 保护区" },
+                { "text": "promote", "meaning": "vt. 促进;提升;推销;晋级" },
+                { "text": "cypress", "meaning": "n. 柏树" },
+                { "text": "app", "meaning": "n. 应用程序;应用软件" },
+                { "text": "application", "meaning": "n. 申请(表);用途;运用;应用(程序)" },
+                { "text": "take part in", "meaning": "参与(某事);参加(某活动)" },
+                { "text": "give way to", "meaning": "让步;屈服" },
+                { "text": "balance", "meaning": "n. 平衡;均匀; vt. 使平衡" },
+                { "text": "keep balance", "meaning": "保持平衡" },
+                { "text": "lead to", "meaning": "导致" },
+                { "text": "dam", "meaning": "n. 水坝;拦河坝" },
+                { "text": "proposal", "meaning": "n. 提议;建议" },
+                { "text": "make a proposal", "meaning": "提出建议" },
+                { "text": "protest", "meaning": "n. 抗议; vi. & vt. (公开)反对;抗议" },
+                { "text": "likely", "meaning": "adj. 可能的; adv. 可能地" },
+                { "text": "turn to", "meaning": "求助" },
+                { "text": "committee", "meaning": "n. 委员会" },
+                { "text": "establish", "meaning": "vt. 建立;创立" },
+                { "text": "limit", "meaning": "n. 限度;限制; vt. 限制;限定" },
+                { "text": "prevent", "meaning": "vt. 阻止;阻碍;阻挠" },
+                { "text": "prevent... from...", "meaning": "阻止;不准" },
+                { "text": "loss", "meaning": "n. 丧失;损失" },
+                { "text": "contribution", "meaning": "n. 捐款;贡献;捐赠" },
+                { "text": "contribute", "meaning": "vi. & vt. 捐献;捐助" },
+                { "text": "department", "meaning": "n. 部;司;科" },
+                { "text": "fund", "meaning": "n. 基金;专款" },
+                { "text": "within", "meaning": "prep. & adv. 在(某段时间,距离或范围)之内" },
+                { "text": "investigate", "meaning": "vi. & vt. 调查;研究" },
+                { "text": "issue", "meaning": "n. 重要议题;争论的问题; vt. 宣布;公布" },
+                { "text": "conduct", "meaning": "n. 行为;举止;管理方法; vt. 组织;安排;带领" },
+                { "text": "document", "meaning": "n. 文件;公文;(计算机)文档; vt. 记录;记载(详情)" },
+                { "text": "donate", "meaning": "vt. (尤指向慈善机构)捐赠;赠送;献(血)" },
+                { "text": "donate... to...", "meaning": "向……捐赠" },
+                { "text": "disappear", "meaning": "vi. 消失;灭绝;消亡" },
+                { "text": "attempt", "meaning": "n. & vt. 企图;试图;尝试" },
+                { "text": "make sure", "meaning": "确保;设法保证" },
+                { "text": "worthwhile", "meaning": "adj. 值得做的;值得花时间的" },
+                { "text": "download", "meaning": "vt. 下载; n. 下载;已下载的数据资料" },
+                { "text": "republic", "meaning": "n. 共和国" },
+                { "text": "professional", "meaning": "adj. 专业的;职业的; n. 专业人员;职业选手" }
+            ],
+            "第一部分 Unit 2": [
+                { "text": "poster", "meaning": "n. 海报" },
+                { "text": "illegal", "meaning": "adj. 不合法的;非法的" },
+                { "text": "illegally", "meaning": "adv. 不合法地;非法地" },
+                { "text": "hunt", "meaning": "vt. & vi. 打猎;搜寻;追捕" },
+                { "text": "hunter", "meaning": "n. 猎人" },
+                { "text": "immediately", "meaning": "adv. 立刻" },
+                { "text": "species", "meaning": "n. 物种" },
+                { "text": "shark", "meaning": "n. 鲨鱼" },
+                { "text": "fin", "meaning": "n. (鱼的)鳍" },
+                { "text": "on earth", "meaning": "(放在疑问词之后表示强调)究竟;到底" },
+                { "text": "die out", "meaning": "灭亡;逐渐消失" },
+                { "text": "alarming", "meaning": "adj. 惊人的;使人惊恐的" },
+                { "text": "alarm", "meaning": "vt. 使惊恐;使害怕;使担心; n. 恐慌;警报;警报器" },
+                { "text": "rate", "meaning": "n. 速度;(比)率; vt. 划分等级" },
+                { "text": "rating", "meaning": "n. 等级;级别" },
+                { "text": "extinct", "meaning": "adj. 已灭绝的" },
+                { "text": "extinction", "meaning": "n. 灭绝" },
+                { "text": "mass", "meaning": "adj. 大量的;广泛的; n. 大量;堆;群" },
+                { "text": "habitat", "meaning": "n. 栖息地;动植物的生活环境" },
+                { "text": "aware", "meaning": "adj. 知道;发觉;有意识的" },
+                { "text": "aware of", "meaning": "意识到;知道" },
+                { "text": "endanger", "meaning": "vt. 使遭受危险;危害" },
+                { "text": "average", "meaning": "n. 平均数;平均水平; adj. 平均的;正常的;普通的" },
+                { "text": "on average", "meaning": "平均" },
+                { "text": "prince", "meaning": "n. 王子;王孙;亲王" },
+                { "text": "make progress", "meaning": "取得进步" },
+                { "text": "concern", "meaning": "vt. 涉及;让……担忧" },
+                { "text": "concerned", "meaning": "adj. 担心的;关切的" },
+                { "text": "concerned about", "meaning": "对……关切的;为……担忧的" },
+                { "text": "living", "meaning": "adj. 居住的;活的;在用的; n. 生活;生计" },
+                { "text": "adapt", "meaning": "vi. 适应; vt. 使适应;使适合" },
+                { "text": "adapt to", "meaning": "适应" },
+                { "text": "measure", "meaning": "n. 措施;方法; vt. 测量;度量;估量" },
+                { "text": "authority", "meaning": "n. 官方;当权;权威" },
+                { "text": "pressure", "meaning": "n. 压力;要求" },
+                { "text": "under pressure", "meaning": "在压力下;承受压力" }
+            ],
+            "第一部分 Unit 3": [
+                { "text": "blog", "meaning": "n. 博客; vi. 写博客" },
+                { "text": "blog post", "meaning": "博文;博客帖子" },
+                { "text": "blogger", "meaning": "n. 博客作者;博主" },
+                { "text": "engine", "meaning": "n. 引擎;发动机;火车头" },
+                { "text": "search engine", "meaning": "搜索引擎" },
+                { "text": "chat", "meaning": "vi. & n. 聊天;闲聊" },
+                { "text": "stream", "meaning": "vt. 播;流出; vi. 流动; n. 小河;溪流" },
+                { "text": "identity", "meaning": "n. 身份;个性" },
+                { "text": "identity card", "meaning": "身份证" },
+                { "text": "convenient", "meaning": "adj. 方便的;近便的" },
+                { "text": "cash", "meaning": "n. 现金;金钱" },
+                { "text": "update", "meaning": "vt. 更新;提供最新信息; n. 最新消息" },
+                { "text": "database", "meaning": "n. 数据库;资料库" },
+                { "text": "software", "meaning": "n. 软件" },
+                { "text": "network", "meaning": "n. 网络; vt. 联播; vi. 建立工作关系" },
+                { "text": "stuck", "meaning": "adj. 卡住;陷入;困于" },
+                { "text": "keep sb company", "meaning": "陪伴某人" },
+                { "text": "surf", "meaning": "vt. & vi. 浏览;冲浪" },
+                { "text": "benefit", "meaning": "n. 益处; vt. 使受益; vi. 得益于" }
+            ],
+            "第一部分 Unit 4": [
+                { "text": "Confucius", "meaning": "n. 孔子" },
+                { "text": "mansion", "meaning": "n. 公馆;宅第" },
+                { "text": "cemetery", "meaning": "n. 墓地;公墓" },
+                { "text": "philosophy", "meaning": "n. 哲学" },
+                { "text": "descendant", "meaning": "n. 后裔;后代;子孙" },
+                { "text": "individual", "meaning": "adj. 单独的;个别的; n. 个人" },
+                { "text": "heel", "meaning": "n. 足跟;后跟" },
+                { "text": "Achilles' heel", "meaning": "致命的弱点" },
+                { "text": "kingdom", "meaning": "n. 王国;领域" },
+                { "text": "account", "meaning": "n. 账户;描述" },
+                { "text": "click", "meaning": "vi. & vt. 点击" },
+                { "text": "privacy", "meaning": "n. 隐私;私密" },
+                { "text": "theft", "meaning": "n. 盗窃罪" },
+                { "text": "chief", "meaning": "adj. 最重要的;最高级别的; n. 首领;酋长" },
+                { "text": "puzzle", "meaning": "n. 谜;智力游戏; vt. 迷惑;使困惑" },
+                { "text": "rude", "meaning": "adj. 粗鲁的;无礼的" },
+                { "text": "target", "meaning": "n. 目标;对象; vt. 把……作为攻击目标" },
+                { "text": "troll", "meaning": "n. 发挑衅帖子的人" },
+                { "text": "cyberbully", "meaning": "n. 网霸; vt. & vi. 网络欺凌" },
+                { "text": "nearby", "meaning": "adj. 附近的; adv. 在附近" },
+                { "text": "join... to...", "meaning": "把……和……连接起来" },
+                { "text": "break away (from sb/sth)", "meaning": "脱离;背叛" },
+                { "text": "belong", "meaning": "vi. 应在(某处);适应" },
+                { "text": "belong to", "meaning": "属于" }
+            ],
+            "第一部分 Unit 5": [
+                { "text": "classical", "meaning": "adj. 古典的;经典的" },
+                { "text": "hip-hop", "meaning": "n. 嘻哈音乐" },
+                { "text": "techno", "meaning": "n. 泰克诺音乐" },
+                { "text": "energy", "meaning": "n. 能源;能量;精力" },
+                { "text": "soul", "meaning": "n. 灵魂;心灵" },
+                { "text": "bagpipes", "meaning": "n. 风笛" },
+                { "text": "stringed instrument", "meaning": "弦乐器" },
+                { "text": "virtual", "meaning": "adj. 虚拟的" },
+                { "text": "virtual choir", "meaning": "虚拟合唱团" },
+                { "text": "composition", "meaning": "n. 成分;作品" },
+                { "text": "opportunity", "meaning": "n. 机会;时机" },
+                { "text": "perform", "meaning": "vi. & vt. 表演;履行;执行" },
+                { "text": "performance", "meaning": "n. 表演;演技;表现" },
+                { "text": "performer", "meaning": "n. 表演者;演员" }
+            ],
+            "词汇表 A": [
+                { "text": "approach", "meaning": "n. 方法;途径;接近; vt. 接近;着手处理; vi. 靠近" },
+                { "text": "absorbed in sth/sb", "meaning": "被……吸引住;专心致志" },
+                { "text": "archaeologist", "meaning": "n. 考古学家" },
+                { "text": "access", "meaning": "n. 通道;机会; vt. 进入;使用;获取" },
+                { "text": "as well as", "meaning": "同……一样也;和;还" },
+                { "text": "assume", "meaning": "vt. 以为;假设" },
+                { "text": "Aswan Dam", "meaning": "阿斯旺大坝" },
+                { "text": "account", "meaning": "n. 账户;描述" },
+                { "text": "ache", "meaning": "vi. & n. 疼痛" },
+                { "text": "achievement", "meaning": "n. 成就;成绩;达到" },
+                { "text": "attack", "meaning": "n. vi. & vt. 攻击;抨击" },
+                { "text": "attempt", "meaning": "n. & vt. 企图;试图;尝试" },
+                { "text": "author", "meaning": "n. 作者;作家" },
+                { "text": "authority", "meaning": "n. 官方;当权;权威" },
+                { "text": "adapt", "meaning": "vi. 适应; vt. 使适应;使适合" },
+                { "text": "adapt to", "meaning": "适应" },
+                { "text": "average", "meaning": "n. 平均数;水平; adj. 平均的;正常的;普通的" },
+                { "text": "on average", "meaning": "平均" },
+                { "text": "addition", "meaning": "n. 添加;加法;增加物" },
+                { "text": "in addition (to sb/sth)", "meaning": "除……以外(还)" },
+                { "text": "award", "meaning": "vt. 授予; n. 奖品" },
+                { "text": "aim", "meaning": "n. 目的;目标; vi. & vt. 力求达到;瞄准" },
+                { "text": "aware", "meaning": "adj. 知道;发觉;有意识的" },
+                { "text": "aware of", "meaning": "意识到;知道" },
+                { "text": "alarm", "meaning": "vt. 使惊恐;担心; n. 恐慌;警报器" },
+                { "text": "alarming", "meaning": "adj. 惊人的;使人惊恐的" },
+                { "text": "album", "meaning": "n. 相册;音乐专辑" },
+                { "text": "all over the world", "meaning": "在世界各地" },
+                { "text": "altogether", "meaning": "adv. 全部;总共" },
+                { "text": "amount", "meaning": "n. 金额;数量" },
+                { "text": "ancestor", "meaning": "n. 祖宗;祖先" },
+                { "text": "announce", "meaning": "vt. 宣布;通知;声称" }
+            ],
+            "词汇表 B": [
+                { "text": "bagpipes", "meaning": "n. 风笛" },
+                { "text": "balance", "meaning": "n. 平衡;均匀; vt. 使平衡" },
+                { "text": "keep balance", "meaning": "保持平衡" },
+                { "text": "band", "meaning": "n. 乐队;带子" },
+                { "text": "battery", "meaning": "n. 电池" },
+                { "text": "battle", "meaning": "n. 战役;搏斗; vi. & vt. 奋斗" },
+                { "text": "beauty", "meaning": "n. 美;美人" },
+                { "text": "beer", "meaning": "n. 啤酒" },
+                { "text": "being", "meaning": "n. 身心;存在;生物" },
+                { "text": "belong", "meaning": "vi. 应在(某处);适应" },
+                { "text": "belong to", "meaning": "属于" },
+                { "text": "benefit", "meaning": "n. 益处; vt. 使受益; vi. 得益于" },
+                { "text": "binoculars", "meaning": "n. 双筒望远镜" },
+                { "text": "blog", "meaning": "n. 博客; vi. 写博客" },
+                { "text": "blogger", "meaning": "n. 博客作者;博主" },
+                { "text": "break away (from sb/sth)", "meaning": "脱离;背叛" },
+                { "text": "butter", "meaning": "n. 黄油; vt. 涂黄油于" }
+            ],
+            "词汇表 C": [
+                { "text": "capable", "meaning": "adj. 有能力的;有才能的" },
+                { "text": "cash", "meaning": "n. 现金;金钱" },
+                { "text": "cemetery", "meaning": "n. 墓地;公墓" },
+                { "text": "charge", "meaning": "n. 收费;主管; vt. 充电" },
+                { "text": "charity", "meaning": "n. 慈善机构" },
+                { "text": "chat", "meaning": "vi. & n. 聊天;闲聊" },
+                { "text": "chief", "meaning": "adj. 最重要的; n. 首领" },
+                { "text": "classical", "meaning": "adj. 古典的" },
+                { "text": "click", "meaning": "vi. & vt. 点击" },
+                { "text": "committee", "meaning": "n. 委员会" },
+                { "text": "comparison", "meaning": "n. 比较;相比" },
+                { "text": "composer", "meaning": "n. 作曲家" },
+                { "text": "concern", "meaning": "n. 涉及; vt. 让……担忧" },
+                { "text": "concerned", "meaning": "adj. 担心的;关切的" },
+                { "text": "conductor", "meaning": "n. 指挥;售票员" },
+                { "text": "conference", "meaning": "n. 会议;研讨会" },
+                { "text": "confirm", "meaning": "vt. 确认;使确信" },
+                { "text": "conquer", "meaning": "vt. 占领;控制" },
+                { "text": "contrast", "meaning": "n. 对照; vt. 对比" },
+                { "text": "contribute", "meaning": "vi. & vt. 捐献" },
+                { "text": "convenient", "meaning": "adj. 方便的" },
+                { "text": "creative", "meaning": "adj. 创造性的" },
+                { "text": "creature", "meaning": "n. 生物;动物" },
+                { "text": "cure", "meaning": "vt. 治愈; n. 药物;措施" },
+                { "text": "cyberbully", "meaning": "n. 网霸; vt. & vi. 网络欺凌" }
+            ],
+            "词汇表 D": [
+                { "text": "dam", "meaning": "n. 水坝" },
+                { "text": "database", "meaning": "n. 数据库" },
+                { "text": "day and night", "meaning": "日日夜夜" },
+                { "text": "deer", "meaning": "n. 鹿" },
+                { "text": "defence", "meaning": "n. 防御" },
+                { "text": "define", "meaning": "vt. 下定义" },
+                { "text": "department", "meaning": "n. 部门" },
+                { "text": "descendant", "meaning": "n. 后裔" },
+                { "text": "die out", "meaning": "灭亡;逐渐消失" },
+                { "text": "digital", "meaning": "adj. 数码的" },
+                { "text": "disappear", "meaning": "vi. 消失;灭绝" },
+                { "text": "discount", "meaning": "n. 折扣; vt. 打折" },
+                { "text": "disease", "meaning": "n. 疾病" },
+                { "text": "distance", "meaning": "n. 距离" },
+                { "text": "document", "meaning": "n. 文件; vt. 记录" },
+                { "text": "dolphin", "meaning": "n. 海豚" },
+                { "text": "donate", "meaning": "vt. 捐赠" },
+                { "text": "due", "meaning": "adj. 由于" },
+                { "text": "due to", "meaning": "因为" }
+            ],
+            "词汇表 E": [
+                { "text": "eager", "meaning": "adj. 热切的" },
+                { "text": "effective", "meaning": "adj. 有效的" },
+                { "text": "emotion", "meaning": "n. 感情" },
+                { "text": "enable", "meaning": "vt. 使能够" },
+                { "text": "endanger", "meaning": "vt. 危害" },
+                { "text": "energy", "meaning": "n. 能源;精力" },
+                { "text": "engine", "meaning": "n. 引擎" },
+                { "text": "ensure", "meaning": "vt. 保证;确保" },
+                { "text": "equipment", "meaning": "n. 设备" },
+                { "text": "establish", "meaning": "vt. 建立" },
+                { "text": "evidence", "meaning": "n. 证据" },
+                { "text": "exist", "meaning": "vi. 存在" },
+                { "text": "exit", "meaning": "n. 出口; vi. & vt. 出去" }
+            ],
+            "词汇表 F": [
+                { "text": "fall in love with", "meaning": "爱上" },
+                { "text": "false", "meaning": "adj. 假的" },
+                { "text": "familiar", "meaning": "adj. 熟悉" },
+                { "text": "fascinating", "meaning": "adj. 迷人的" },
+                { "text": "feast", "meaning": "n. 盛宴" },
+                { "text": "file", "meaning": "n. 文件" },
+                { "text": "fin", "meaning": "n. 鳍" },
+                { "text": "forever", "meaning": "adv. 永远" },
+                { "text": "forgive", "meaning": "vt. 原谅; 对不起" },
+                { "text": "former", "meaning": "adj. 以前的" },
+                { "text": "function", "meaning": "n. 功能; vi. 起作用" },
+                { "text": "fund", "meaning": "n. 基金" },
+                { "text": "fur", "meaning": "n. 毛皮" }
+            ],
+            "词汇表 G": [
+                { "text": "gallery", "meaning": "n. 展览馆;画廊" },
+                { "text": "generous", "meaning": "adj. 慷慨的" },
+                { "text": "get through", "meaning": "处理;完成" },
+                { "text": "go through", "meaning": "经历;通读" },
+                { "text": "goods", "meaning": "n. 商品" },
+                { "text": "gradual", "meaning": "adj. 逐渐的" },
+                { "text": "greet", "meaning": "vt. 问候" },
+                { "text": "guideline", "meaning": "n. 准则" }
+            ],
+            "词汇表 H": [
+                { "text": "habitat", "meaning": "n. 栖息地" },
+                { "text": "harmony", "meaning": "n. 和谐" },
+                { "text": "heel", "meaning": "n. 足跟" },
+                { "text": "herd", "meaning": "n. 牧群" },
+                { "text": "heritage", "meaning": "n. 遗产" },
+                { "text": "historic", "meaning": "adj. 历史上著名的" },
+                { "text": "honey", "meaning": "n. 蜂蜜" },
+                { "text": "hunt", "meaning": "vt. & vi. 打猎" },
+                { "text": "hunter", "meaning": "n. 猎人" }
+            ],
+            "词汇表 I": [
+                { "text": "identify", "meaning": "vt. 确认" },
+                { "text": "identity", "meaning": "n. 身份" },
+                { "text": "illegal", "meaning": "adj. 不合法的" },
+                { "text": "illegally", "meaning": "adv. 非法地" },
+                { "text": "image", "meaning": "n. 形象" },
+                { "text": "immediately", "meaning": "adv. 立刻" },
+                { "text": "impact", "meaning": "n. 巨大影响" },
+                { "text": "individual", "meaning": "adj. 个别的; n. 个人" },
+                { "text": "insect", "meaning": "n. 昆虫" },
+                { "text": "inspire", "meaning": "vt. 鼓舞" },
+                { "text": "intend", "meaning": "vi. & vt. 打算" },
+                { "text": "investigate", "meaning": "vi. & vt. 调查" }
+            ],
+            "词汇表 J - L": [
+                { "text": "join... to...", "meaning": "连接起来" },
+                { "text": "kangaroo", "meaning": "n. 袋鼠" },
+                { "text": "kingdom", "meaning": "n. 王国" },
+                { "text": "landscape", "meaning": "n. 风景" },
+                { "text": "lead to", "meaning": "导致" },
+                { "text": "lean", "meaning": "vi. & vt. 依靠" },
+                { "text": "legal", "meaning": "adj. 合法的" },
+                { "text": "likely", "meaning": "adj. 可能的" },
+                { "text": "limit", "meaning": "n. 限度; vt. 限制" },
+                { "text": "living", "meaning": "adj. 活的; n. 生计" },
+                { "text": "location", "meaning": "n. 地点" },
+                { "text": "loss", "meaning": "n. 损失" }
+            ],
+            "词汇表 M - P": [
+                { "text": "measure", "meaning": "n. 措施; vt. 测量" },
+                { "text": "military", "meaning": "adj. 军事的" },
+                { "text": "moreover", "meaning": "adv. 而且" },
+                { "text": "mount", "meaning": "n. 山峰; vt. 爬上" },
+                { "text": "nearby", "meaning": "adj. 附近的" },
+                { "text": "network", "meaning": "n. 网络; vt. 联播" },
+                { "text": "observe", "meaning": "vt. 观察" },
+                { "text": "ocean", "meaning": "n. 大海" },
+                { "text": "opinion", "meaning": "n. 意见" },
+                { "text": "opportunity", "meaning": "n. 机会" },
+                { "text": "ordinary", "meaning": "adj. 普通的" },
+                { "text": "original", "meaning": "adj. 原来的; n. 原件" },
+                { "text": "performance", "meaning": "n. 表演" },
+                { "text": "philosophy", "meaning": "n. 哲学" },
+                { "text": "piano", "meaning": "n. 钢琴" },
+                { "text": "plain", "meaning": "n. 平原" },
+                { "text": "plus", "meaning": "conj. 而且; prep. 加" },
+                { "text": "poet", "meaning": "n. 诗人" },
+                { "text": "port", "meaning": "n. 港口" },
+                { "text": "poster", "meaning": "n. 海报" },
+                { "text": "preserve", "meaning": "vt. 保存" },
+                { "text": "press", "meaning": "vt. 压;敦促" },
+                { "text": "pressure", "meaning": "n. 压力" },
+                { "text": "prevent", "meaning": "vt. 阻止" },
+                { "text": "previous", "meaning": "adj. 先前的" },
+                { "text": "privacy", "meaning": "n. 隐私" },
+                { "text": "process", "meaning": "n. 过程; vt. 处理" },
+                { "text": "profit", "meaning": "n. 利润" },
+                { "text": "promote", "meaning": "vt. 促进" },
+                { "text": "prove", "meaning": "vt. 证明" }
+            ],
+            "词汇表 Q - W": [
+                { "text": "quality", "meaning": "n. 质量" },
+                { "text": "quote", "meaning": "vt. 引用" },
+                { "text": "rap", "meaning": "n. 说唱音乐; vi. & vt. 敲击" },
+                { "text": "rate", "meaning": "n. 速度; vt. 划分等级" },
+                { "text": "reaction", "meaning": "n. 反应" },
+                { "text": "recover", "meaning": "vi. 恢复; vt. 找回" },
+                { "text": "reduce", "meaning": "vt. 减少" },
+                { "text": "relief", "meaning": "n. 减轻;宽慰" },
+                { "text": "remind", "meaning": "vt. 提醒" },
+                { "text": "remove", "meaning": "vt. 去除" },
+                { "text": "republic", "meaning": "n. 共和国" },
+                { "text": "reserve", "meaning": "n. 保护区; vt. 预订" },
+                { "text": "resident", "meaning": "n. 居民; adj. 居住的" },
+                { "text": "roar", "meaning": "vi. & n. 吼叫" },
+                { "text": "sacred", "meaning": "adj. 神圣的" },
+                { "text": "satisfaction", "meaning": "n. 满足" },
+                { "text": "scent", "meaning": "n. 气味" },
+                { "text": "software", "meaning": "n. 软件" },
+                { "text": "soul", "meaning": "n. 灵魂" },
+                { "text": "species", "meaning": "n. 物种" },
+                { "text": "stage", "meaning": "n. 阶段;舞台" },
+                { "text": "studio", "meaning": "n. 演播室" },
+                { "text": "surf", "meaning": "vt. & vi. 浏览" },
+                { "text": "take part in", "meaning": "参与" },
+                { "text": "talent", "meaning": "n. 天才" },
+                { "text": "target", "meaning": "n. 目标; vt. 作为攻击目标" },
+                { "text": "theft", "meaning": "n. 盗窃罪" },
+                { "text": "threat", "meaning": "n. 威胁" },
+                { "text": "tough", "meaning": "adj. 艰难的" },
+                { "text": "update", "meaning": "vt. 更新; n. 最新消息" },
+                { "text": "various", "meaning": "adj. 各种各样的" },
+                { "text": "virtual", "meaning": "adj. 虚拟的" },
+                { "text": "watch over", "meaning": "保护" },
+                { "text": "whale", "meaning": "n. 鲸" },
+                { "text": "within", "meaning": "prep. & adv. 在……之内" },
+                { "text": "worthwhile", "meaning": "adj. 值得做的" }
+            ]
+        };
+
+        let currentDayWords = [];
+        let currentIndex = 0;
+        let isPaused = false;
+        let isRunning = false;
+
+        window.onload = function() {
+            initDaySelector();
+            loadDay();
+        };
+
+        function initDaySelector() {
+            const select = document.getElementById('daySelect');
+            const keys = Object.keys(wordData);
+            
+            keys.forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.text = key + ` (${wordData[key].length} words)`;
+                select.appendChild(option);
+            });
+        }
+
+        function loadDay() {
+            if (isRunning) {
+                alert("请先停止当前听写再切换天数！");
+                const previousKey = Object.keys(wordData).find(key => wordData[key] === currentDayWords);
+                if (previousKey) document.getElementById('daySelect').value = previousKey;
+                return;
+            }
+            
+            const selectedDay = document.getElementById('daySelect').value;
+            currentDayWords = wordData[selectedDay];
+            
+            document.getElementById('totalCount').textContent = currentDayWords.length;
+            document.getElementById('currentProgress').textContent = `0 / ${currentDayWords.length}`;
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressBar').textContent = '0%';
+            
+            resetUI();
+            renderPreview();
+        }
+
+        function renderPreview() {
+            const list = document.getElementById('previewList');
+            list.innerHTML = '';
+            currentDayWords.forEach((word, index) => {
+                const item = document.createElement('div');
+                item.className = 'answer-item';
+                item.innerHTML = `
+                    <div class="answer-left">
+                        <span class="answer-number">${index + 1}.</span>
+                        <span class="answer-text">${word.text}</span>
+                    </div>
+                    <span class="answer-meaning">${word.meaning}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function resetUI() {
+            document.getElementById('answers').style.display = 'none';
+            document.getElementById('previewArea').style.display = 'block';
+            document.getElementById('starting').style.display = 'flex';
+            document.getElementById('starting').textContent = '准备就绪，点击开始';
+            document.getElementById('currentWord').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('resumeBtn').style.display = 'none';
+            document.getElementById('restartBtn').style.display = 'none';
+            document.getElementById('daySelect').disabled = false;
+            document.getElementById('speechRate').disabled = false;
+            document.getElementById('repeatCount').disabled = false;
+            document.getElementById('waitTime').disabled = false;
+        }
+
+        function unlockAudio() {
+            const u = new SpeechSynthesisUtterance("");
+            window.speechSynthesis.speak(u);
+        }
+
+        async function startDictation() {
+            if (!('speechSynthesis' in window)) {
+                alert("您的浏览器不支持语音朗读功能，请使用 Chrome/Edge/Safari 等现代浏览器。");
+                return;
+            }
+
+            unlockAudio();
+
+            isRunning = true;
+            currentIndex = 0;
+            document.getElementById('daySelect').disabled = true;
+            document.getElementById('speechRate').disabled = true;
+            document.getElementById('repeatCount').disabled = true;
+            document.getElementById('waitTime').disabled = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('restartBtn').style.display = 'none';
+            document.getElementById('answers').style.display = 'none';
+            document.getElementById('previewArea').style.display = 'none';
+
+            const startingEl = document.getElementById('starting');
+            startingEl.style.display = 'flex';
+            
+            for (let i = 3; i > 0; i--) {
+                startingEl.textContent = `听写将在 ${i} 秒后开始...`;
+                await sleep(1000);
+            }
+            startingEl.style.display = 'none';
+            document.getElementById('currentWord').style.display = 'flex';
+
+            for (let i = 0; i < currentDayWords.length; i++) {
+                currentIndex = i;
+                updateProgress();
+                await dictateItem(i);
+                
+                while (isPaused) {
+                    await sleep(100);
+                }
+            }
+
+            finishDictation();
+        }
+
+        async function dictateItem(index) {
+            const word = currentDayWords[index];
+            const displayEl = document.getElementById('currentWord');
+            
+            const repeatCount = parseInt(document.getElementById('repeatCount').value);
+            const waitTime = parseInt(document.getElementById('waitTime').value);
+
+            displayEl.textContent = `单词 ${index + 1}`;
+            displayEl.style.color = "#2d3748";
+
+            for (let r = 0; r < repeatCount; r++) {
+                if (isPaused) return;
+                
+                await speak(word.text);
+                
+                if (r < repeatCount - 1) {
+                    await sleep(1500);
+                }
+            }
+
+            displayEl.style.color = "#718096";
+            for (let t = waitTime; t > 0; t--) {
+                if (isPaused) return;
+                displayEl.textContent = `等待 ${t} 秒...`;
+                await sleep(1000);
+            }
+        }
+
+        function speak(text) {
+            return new Promise((resolve) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                const selectedRate = document.getElementById('speechRate').value;
+                utterance.rate = parseFloat(selectedRate);
+                
+                utterance.onend = () => {
+                    resolve();
+                };
+                
+                utterance.onerror = (e) => {
+                    console.error("Speech error:", e);
+                    resolve();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        function updateProgress() {
+            const total = currentDayWords.length;
+            const current = currentIndex + 1;
+            const percentage = Math.round((current / total) * 100);
+            
+            document.getElementById('currentProgress').textContent = `${current} / ${total}`;
+            const bar = document.getElementById('progressBar');
+            bar.style.width = `${percentage}%`;
+            bar.textContent = `${percentage}%`;
+        }
+
+        function pauseDictation() {
+            isPaused = true;
+            window.speechSynthesis.cancel();
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('resumeBtn').style.display = 'inline-block';
+            document.getElementById('currentWord').textContent = "已暂停";
+        }
+
+        function resumeDictation() {
+            isPaused = false;
+            document.getElementById('resumeBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+        }
+
+        function resetDictation() {
+            window.speechSynthesis.cancel();
+            isRunning = false;
+            isPaused = false;
+            resetUI();
+            loadDay();
+        }
+
+        function finishDictation() {
+            isRunning = false;
+            document.getElementById('currentWord').textContent = "听写完成！";
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('restartBtn').style.display = 'inline-block';
+            document.getElementById('daySelect').disabled = false;
+            document.getElementById('speechRate').disabled = false;
+            document.getElementById('repeatCount').disabled = false;
+            document.getElementById('waitTime').disabled = false;
+            document.getElementById('previewArea').style.display = 'none';
+            
+            showAnswers();
+        }
+
+        function showAnswers() {
+            const list = document.getElementById('answerList');
+            list.innerHTML = '';
+            
+            currentDayWords.forEach((word, index) => {
+                const item = document.createElement('div');
+                item.className = 'answer-item';
+                item.innerHTML = `
+                    <div class="answer-left">
+                        <span class="answer-number">${index + 1}.</span>
+                        <span class="answer-text">${word.text}</span>
+                    </div>
+                    <span class="answer-meaning">${word.meaning}</span>
+                `;
+                list.appendChild(item);
+            });
+
+            document.getElementById('answers').style.display = 'block';
+            document.getElementById('answers').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
